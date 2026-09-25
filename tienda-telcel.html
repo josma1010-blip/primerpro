@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChipTelcel - Tienda Oficial de Chips Telcel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .telcel-blue {
+            background-color: #0033A0;
+        }
+        
+        .telcel-blue-text {
+            color: #0033A0;
+        }
+        
+        .telcel-light {
+            background-color: #E6F0FF;
+        }
+        
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #EF4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .product-card {
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        
+        .cart-sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .cart-sidebar.open {
+            transform: translateX(0);
+        }
+        
+        .overlay {
+            transition: opacity 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0033A0 0%, #0055CC 100%);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #002280 0%, #0044AA 100%);
+        }
+        
+        .quantity-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: #F3F4F6;
+            transition: all 0.2s;
+        }
+        
+        .quantity-btn:hover {
+            background: #E5E7EB;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #0033A0 0%, #0055CC 50%, #0077EE 100%);
+        }
+        
+        .badge-popular {
+            background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+        }
+        
+        .badge-new {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+        
+        .toast {
+            animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(20px); }
+        }
+        
+        /* Custom scrollbar */
+        .cart-items::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .cart-items::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .cart-items::-webkit-scrollbar-thumb {
+            background: #0033A0;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg z-50 hidden flex items-center gap-3">
+        <i class="fas fa-check-circle text-xl"></i>
+        <span id="toast-message">Producto agregado al carrito</span>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16 md:h-20">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 md:w-12 md:h-12 telcel-blue rounded-xl flex items-center justify-center">
+                        <i class="fas fa-sim-card text-white text-xl md:text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold telcel-blue-text">ChipTelcel</h1>
+                        <p class="text-xs text-gray-500 hidden sm:block">Tienda Oficial de Chips</p>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="hidden md:flex items-center gap-8">
+                    <a href="#productos" class="text-gray-700 hover:text-blue-700 font-medium transition">Productos</a>
+                    <a href="#beneficios" class="text-gray-700 hover:text-blue-700 font-medium transition">Beneficios</a>
+                    <a href="#como-funciona" class="text-gray-700 hover:text-blue-700 font-medium transition">Cómo funciona</a>
+                    <a href="#faq" class="text-gray-700 hover:text-blue-700 font-medium transition">Preguntas</a>
+                </nav>
+
+                <!-- Cart Button -->
+                <button onclick="toggleCart()" class="relative p-2 hover:bg-gray-100 rounded-xl transition">
+                    <i class="fas fa-shopping-cart text-2xl telcel-blue-text"></i>
+                    <span id="cart-count" class="cart-badge hidden">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient text-white py-16 md:py-24">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center">
+                <span class="inline-block bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium mb-6">
+                    🚀 Envío gratis en compras mayores a $300
+                </span>
+                <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight">
+                    Tu Chip Telcel<br>
+                    <span class="text-yellow-300">Listo en Minutos</span>
+                </h2>
+                <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+                    Compra tu chip Telcel prepago o eSIM con los mejores paquetes de datos, llamadas ilimitadas y redes sociales. Activación inmediata.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="#productos" class="bg-white text-blue-800 font-bold px-8 py-4 rounded-xl hover:bg-yellow-300 transition shadow-lg">
+                        Ver Chips Disponibles
+                    </a>
+                    <a href="#como-funciona" class="border-2 border-white text-white font-bold px-8 py-4 rounded-xl hover:bg-white/10 transition">
+                        Cómo Activar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Bar -->
+    <section class="bg-white border-b">
+        <div class="container mx-auto px-4 py-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 telcel-light rounded-full flex items-center justify-center">
+                        <i class="fas fa-shipping-fast telcel-blue-text text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700">Envío Nacional</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 telcel-light rounded-full flex items-center justify-center">
+                        <i class="fas fa-bolt telcel-blue-text text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700">Activación Instantánea</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 telcel-light rounded-full flex items-center justify-center">
+                        <i class="fas fa-shield-alt telcel-blue-text text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700">100% Original</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 telcel-light rounded-full flex items-center justify-center">
+                        <i class="fas fa-headset telcel-blue-text text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700">Soporte 24/7</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="productos" class="py-16 md:py-20">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Nuestros Chips Telcel</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Elige el chip perfecto para ti. Todos incluyen activación y son compatibles con cualquier equipo desbloqueado.</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex flex-wrap justify-center gap-3 mb-10">
+                <button onclick="filterProducts('all')" class="filter-btn active px-5 py-2 rounded-full border-2 border-blue-700 bg-blue-700 text-white font-medium transition" data-filter="all">
+                    Todos
+                </button>
+                <button onclick="filterProducts('chip')" class="filter-btn px-5 py-2 rounded-full border-2 border-gray-300 text-gray-700 font-medium hover:border-blue-700 transition" data-filter="chip">
+                    Chip Físico
+                </button>
+                <button onclick="filterProducts('esim')" class="filter-btn px-5 py-2 rounded-full border-2 border-gray-300 text-gray-700 font-medium hover:border-blue-700 transition" data-filter="esim">
+                    eSIM
+                </button>
+                <button onclick="filterProducts('paquete')" class="filter-btn px-5 py-2 rounded-full border-2 border-gray-300 text-gray-700 font-medium hover:border-blue-700 transition" data-filter="paquete">
+                    Con Paquete
+                </button>
+            </div>
+
+            <!-- Products Grid -->
+            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Products will be rendered by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section id="beneficios" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">¿Por qué comprar con nosotros?</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">La forma más fácil y segura de obtener tu chip Telcel</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 telcel-blue rounded-2xl flex items-center justify-center mx-auto mb-5">
+                        <i class="fas fa-check-double text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Chips 100% Originales</h3>
+                    <p class="text-gray-600">Todos nuestros chips son oficiales de Telcel, con garantía de activación y cobertura nacional.</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 telcel-blue rounded-2xl flex items-center justify-center mx-auto mb-5">
+                        <i class="fas fa-mobile-alt text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Compatible con todos</h3>
+                    <p class="text-gray-600">Funciona en iPhone, Samsung, Xiaomi, Motorola y cualquier equipo desbloqueado. Nano, Micro y eSIM.</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 telcel-blue rounded-2xl flex items-center justify-center mx-auto mb-5">
+                        <i class="fas fa-clock text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Activación Rápida</h3>
+                    <p class="text-gray-600">Recibe instrucciones de activación por WhatsApp o email. Listo para usar en menos de 15 minutos.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section id="como-funciona" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Cómo funciona</h2>
+                <p class="text-gray-600">En 4 simples pasos tienes tu chip listo</p>
+            </div>
+
+            <div class="grid md:grid-cols-4 gap-8 max-w-5xl mx-auto">
+                <div class="relative text-center">
+                    <div class="w-14 h-14 telcel-blue text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">1</div>
+                    <h3 class="font-bold text-gray-900 mb-2">Elige tu chip</h3>
+                    <p class="text-sm text-gray-600">Selecciona el chip o eSIM que más te convenga</p>
+                </div>
+                <div class="relative text-center">
+                    <div class="w-14 h-14 telcel-blue text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">2</div>
+                    <h3 class="font-bold text-gray-900 mb-2">Agrega al carrito</h3>
+                    <p class="text-sm text-gray-600">Añade los productos y completa tu pedido</p>
+                </div>
+                <div class="relative text-center">
+                    <div class="w-14 h-14 telcel-blue text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">3</div>
+                    <h3 class="font-bold text-gray-900 mb-2">Paga seguro</h3>
+                    <p class="text-sm text-gray-600">Paga con tarjeta, transferencia o en OXXO</p>
+                </div>
+                <div class="relative text-center">
+                    <div class="w-14 h-14 telcel-blue text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">4</div>
+                    <h3 class="font-bold text-gray-900 mb-2">¡Activa y listo!</h3>
+                    <p class="text-sm text-gray-600">Recibe tu chip y actívalo siguiendo las instrucciones</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-16 bg-white">
+        <div class="container mx-auto px-4 max-w-3xl">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Preguntas Frecuentes</h2>
+            </div>
+
+            <div class="space-y-4">
+                <details class="group bg-gray-50 rounded-xl p-5 cursor-pointer">
+                    <summary class="flex justify-between items-center font-semibold text-gray-900 list-none">
+                        ¿Los chips son originales de Telcel?
+                        <i class="fas fa-chevron-down group-open:rotate-180 transition"></i>
+                    </summary>
+                    <p class="mt-3 text-gray-600">Sí, todos nuestros chips son 100% originales y oficiales de Telcel. Garantizamos la activación y cobertura completa.</p>
+                </details>
+                <details class="group bg-gray-50 rounded-xl p-5 cursor-pointer">
+                    <summary class="flex justify-between items-center font-semibold text-gray-900 list-none">
+                        ¿Cuánto tarda el envío?
+                        <i class="fas fa-chevron-down group-open:rotate-180 transition"></i>
+                    </summary>
+                    <p class="mt-3 text-gray-600">El envío estándar tarda de 2 a 5 días hábiles. En CDMX y área metropolitana ofrecemos entrega el mismo día o al día siguiente.</p>
+                </details>
+                <details class="group bg-gray-50 rounded-xl p-5 cursor-pointer">
+                    <summary class="flex justify-between items-center font-semibold text-gray-900 list-none">
+                        ¿Puedo usar eSIM en mi teléfono?
+                        <i class="fas fa-chevron-down group-open:rotate-180 transition"></i>
+                    </summary>
+                    <p class="mt-3 text-gray-600">La eSIM es compatible con iPhone XS y posteriores, Samsung Galaxy S20 y superiores, Google Pixel 3 y más. Verifica compatibilidad en la configuración de tu equipo.</p>
+                </details>
+                <details class="group bg-gray-50 rounded-xl p-5 cursor-pointer">
+                    <summary class="flex justify-between items-center font-semibold text-gray-900 list-none">
+                        ¿Qué métodos de pago aceptan?
+                        <i class="fas fa-chevron-down group-open:rotate-180 transition"></i>
+                    </summary>
+                    <p class="mt-3 text-gray-600">Aceptamos pagos seguros a través de <strong>Mercado Pago</strong>: tarjetas de crédito/débito (Visa, Mastercard, Amex), SPEI, OXXO, saldo Mercado Pago y meses sin intereses.</p>
+                </details>
+                <details class="group bg-gray-50 rounded-xl p-5 cursor-pointer">
+                    <summary class="flex justify-between items-center font-semibold text-gray-900 list-none">
+                        ¿El chip incluye número de teléfono?
+                        <i class="fas fa-chevron-down group-open:rotate-180 transition"></i>
+                    </summary>
+                    <p class="mt-3 text-gray-600">Sí, cada chip nuevo viene con un número Telcel asignado. Si prefieres portar tu número actual, puedes solicitar la portabilidad después de la activación.</p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="telcel-blue text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fas fa-sim-card text-2xl"></i>
+                        <span class="text-xl font-bold">ChipTelcel</span>
+                    </div>
+                    <p class="text-blue-200 text-sm">Tu tienda de confianza para chips Telcel originales. Cobertura en todo México.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Productos</h4>
+                    <ul class="space-y-2 text-blue-200 text-sm">
+                        <li><a href="#productos" class="hover:text-white transition">Chips Físicos</a></li>
+                        <li><a href="#productos" class="hover:text-white transition">eSIM</a></li>
+                        <li><a href="#productos" class="hover:text-white transition">Paquetes de Datos</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Ayuda</h4>
+                    <ul class="space-y-2 text-blue-200 text-sm">
+                        <li><a href="#faq" class="hover:text-white transition">Preguntas Frecuentes</a></li>
+                        <li><a href="#como-funciona" class="hover:text-white transition">Cómo Activar</a></li>
+                        <li><a href="#" class="hover:text-white transition">Contacto</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contacto</h4>
+                    <ul class="space-y-2 text-blue-200 text-sm">
+                        <li class="flex items-center gap-2"><i class="fas fa-envelope"></i> hola@chiptelcel.mx</li>
+                        <li class="flex items-center gap-2"><i class="fab fa-whatsapp"></i> +52 55 1234 5678</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-map-marker-alt"></i> Ciudad de México</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-blue-700 pt-6 text-center text-blue-200 text-sm">
+                <p>© 2025 ChipTelcel. Todos los derechos reservados. No somos afiliados oficiales de Telcel. Esta es una tienda independiente de chips prepago.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Sidebar Overlay -->
+    <div id="cart-overlay" onclick="toggleCart()" class="fixed inset-0 bg-black/50 z-50 hidden opacity-0 overlay"></div>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 cart-sidebar translate-x-full flex flex-col">
+        <div class="flex items-center justify-between p-5 border-b">
+            <h3 class="text-xl font-bold text-gray-900">
+                <i class="fas fa-shopping-cart mr-2 telcel-blue-text"></i>
+                Tu Carrito
+            </h3>
+            <button onclick="toggleCart()" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                <i class="fas fa-times text-xl text-gray-500"></i>
+            </button>
+        </div>
+
+        <div id="cart-items" class="flex-1 overflow-y-auto p-5 cart-items">
+            <!-- Cart items will be rendered here -->
+            <div id="empty-cart" class="text-center py-16">
+                <i class="fas fa-shopping-basket text-6xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 text-lg">Tu carrito está vacío</p>
+                <p class="text-gray-400 text-sm mt-2">Agrega productos para continuar</p>
+            </div>
+        </div>
+
+        <div id="cart-footer" class="border-t p-5 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-gray-600">Subtotal</span>
+                <span id="cart-subtotal" class="text-xl font-bold text-gray-900">$0.00</span>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Envío calculado en el checkout. Envío gratis en compras +$300</p>
+            <button onclick="openCheckout()" class="w-full btn-primary text-white font-bold py-4 rounded-xl hover:shadow-lg transition flex items-center justify-center gap-2">
+                <i class="fas fa-credit-card"></i>
+                Proceder al Pago
+            </button>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-900">Finalizar Compra</h3>
+                <button onclick="closeCheckout()" class="p-2 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-times text-gray-500"></i>
+                </button>
+            </div>
+            <form id="checkout-form" onsubmit="submitOrder(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+                    <input type="text" id="payer-name" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Juan Pérez">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="payer-email" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="juan@email.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <input type="tel" id="payer-phone" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="55 1234 5678">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Dirección de envío</label>
+                    <textarea id="payer-address" required rows="2" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Calle, número, colonia, CP, Ciudad"></textarea>
+                </div>
+                
+                <!-- Mercado Pago info -->
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                    <div class="flex items-center gap-3 mb-2">
+                        <img src="https://http2.mlstatic.com/frontend-assets/mp-web-assets/logo-mp.svg" alt="Mercado Pago" class="h-6">
+                        <span class="text-sm font-semibold text-gray-700">Pago seguro con Mercado Pago</span>
+                    </div>
+                    <p class="text-xs text-gray-500">Aceptamos tarjetas, SPEI, OXXO, y saldo Mercado Pago. Serás redirigido a la plataforma segura de Mercado Pago.</p>
+                </div>
+
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600">Subtotal</span>
+                        <span id="checkout-subtotal" class="font-medium">$0.00</span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600">Envío</span>
+                        <span id="checkout-shipping" class="font-medium">$0.00</span>
+                    </div>
+                    <div class="flex justify-between text-lg font-bold border-t pt-2 mt-2">
+                        <span>Total</span>
+                        <span id="checkout-total" class="telcel-blue-text">$0.00</span>
+                    </div>
+                </div>
+                <button type="submit" id="pay-button" class="w-full btn-primary text-white font-bold py-4 rounded-xl hover:shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fas fa-lock"></i>
+                    Pagar con Mercado Pago
+                </button>
+                <p id="payment-error" class="text-red-600 text-sm text-center hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black/60 z-[70] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-check text-4xl text-green-600"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-3">¡Pedido Confirmado!</h3>
+            <p class="text-gray-600 mb-2">Gracias por tu compra. Hemos enviado un correo de confirmación.</p>
+            <p class="text-sm text-gray-500 mb-6">Número de pedido: <strong id="order-number">#TC-00000</strong></p>
+            <button onclick="closeSuccess()" class="btn-primary text-white font-bold px-8 py-3 rounded-xl">
+                Continuar comprando
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Products Data
+        const products = [
+            {
+                id: 1,
+                name: "Chip Telcel Express",
+                description: "Chip físico básico. Ideal para activar con tu propio paquete. Compatible nano/micro.",
+                price: 49,
+                originalPrice: 79,
+                category: "chip",
+                badge: null,
+                features: ["Chip físico", "Activación inmediata", "Número nuevo incluido"],
+                image: "📱"
+            },
+            {
+                id: 2,
+                name: "Chip Amigo 100",
+                description: "Incluye $100 de saldo inicial. Perfecto para empezar a usar de inmediato.",
+                price: 129,
+                originalPrice: 149,
+                category: "paquete",
+                badge: "popular",
+                features: ["$100 de saldo", "Chip físico", "Redes sociales incluidas"],
+                image: "⭐"
+            },
+            {
+                id: 3,
+                name: "eSIM Telcel Prepago",
+                description: "Sin chip físico. Activa en minutos desde tu celular compatible. Ideal para viajeros.",
+                price: 99,
+                originalPrice: 129,
+                category: "esim",
+                badge: "new",
+                features: ["eSIM digital", "Activación QR", "Sin envío físico"],
+                image: "📲"
+            },
+            {
+                id: 4,
+                name: "Chip + 5GB x 30 días",
+                description: "Chip con paquete de 5GB de datos + llamadas y SMS ilimitados por 30 días.",
+                price: 199,
+                originalPrice: 249,
+                category: "paquete",
+                badge: null,
+                features: ["5GB datos", "Llamadas ilimitadas", "WhatsApp gratis"],
+                image: "📶"
+            },
+            {
+                id: 5,
+                name: "Chip + 10GB x 30 días",
+                description: "Más datos para streaming y redes. Incluye redes sociales ilimitadas.",
+                price: 299,
+                originalPrice: 349,
+                category: "paquete",
+                badge: "popular",
+                features: ["10GB datos", "Redes sociales ilimitadas", "Llamadas ilimitadas"],
+                image: "🚀"
+            },
+            {
+                id: 6,
+                name: "eSIM + 15GB Premium",
+                description: "eSIM con el mejor paquete de datos. Ideal para trabajo remoto y streaming.",
+                price: 399,
+                originalPrice: 449,
+                category: "esim",
+                badge: null,
+                features: ["15GB datos", "eSIM digital", "Hotspot incluido"],
+                image: "💎"
+            },
+            {
+                id: 7,
+                name: "Chip Dual Telcel",
+                description: "Chip dual para usar dos líneas en un solo equipo. Perfecto para separar trabajo y personal.",
+                price: 89,
+                originalPrice: 119,
+                category: "chip",
+                badge: null,
+                features: ["Chip dual", "Dos números", "Activación rápida"],
+                image: "🔄"
+            },
+            {
+                id: 8,
+                name: "Chip + Ilimitado Social",
+                description: "Datos ilimitados en WhatsApp, Facebook, Instagram y TikTok + 3GB para navegar.",
+                price: 249,
+                originalPrice: 299,
+                category: "paquete",
+                badge: "new",
+                features: ["Redes ilimitadas", "3GB navegación", "Llamadas ilimitadas"],
+                image: "🌐"
+            }
+        ];
+
+        let cart = JSON.parse(localStorage.getItem('chiptelcel_cart')) || [];
+        let currentFilter = 'all';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
+            updateCartUI();
+        });
+
+        // Render Products
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            const filtered = currentFilter === 'all' 
+                ? products 
+                : products.filter(p => p.category === currentFilter);
+
+            grid.innerHTML = filtered.map(product => `
+                <div class="product-card bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
+                    <div class="relative p-6 pb-0">
+                        ${product.badge === 'popular' ? '<span class="absolute top-4 right-4 badge-popular text-white text-xs font-bold px-3 py-1 rounded-full">POPULAR</span>' : ''}
+                        ${product.badge === 'new' ? '<span class="absolute top-4 right-4 badge-new text-white text-xs font-bold px-3 py-1 rounded-full">NUEVO</span>' : ''}
+                        <div class="text-6xl text-center mb-4">${product.image}</div>
+                    </div>
+                    <div class="p-6 pt-2">
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">${product.name}</h3>
+                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">${product.description}</p>
+                        
+                        <ul class="space-y-1 mb-4">
+                            ${product.features.map(f => `
+                                <li class="text-xs text-gray-600 flex items-center gap-2">
+                                    <i class="fas fa-check text-green-500 text-[10px]"></i> ${f}
+                                </li>
+                            `).join('')}
+                        </ul>
+
+                        <div class="flex items-end gap-2 mb-4">
+                            <span class="text-2xl font-extrabold telcel-blue-text">$${product.price}</span>
+                            ${product.originalPrice ? `<span class="text-sm text-gray-400 line-through">$${product.originalPrice}</span>` : ''}
+                            <span class="text-xs text-gray-500 mb-1">MXN</span>
+                        </div>
+
+                        <button onclick="addToCart(${product.id})" class="w-full btn-primary text-white font-semibold py-3 rounded-xl hover:shadow-md transition flex items-center justify-center gap-2">
+                            <i class="fas fa-cart-plus"></i>
+                            Agregar al carrito
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter Products
+        function filterProducts(filter) {
+            currentFilter = filter;
+            
+            // Update buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === filter) {
+                    btn.classList.add('active', 'bg-blue-700', 'text-white', 'border-blue-700');
+                    btn.classList.remove('border-gray-300', 'text-gray-700');
+                } else {
+                    btn.classList.remove('active', 'bg-blue-700', 'text-white', 'border-blue-700');
+                    btn.classList.add('border-gray-300', 'text-gray-700');
+                }
+            });
+
+            renderProducts();
+        }
+
+        // Cart Functions
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const existing = cart.find(item => item.id === productId);
+
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+
+            saveCart();
+            updateCartUI();
+            showToast(`${product.name} agregado al carrito`);
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            saveCart();
+            updateCartUI();
+        }
+
+        function updateQuantity(productId, delta) {
+            const item = cart.find(item => item.id === productId);
+            if (!item) return;
+
+            item.quantity += delta;
+            if (item.quantity <= 0) {
+                removeFromCart(productId);
+            } else {
+                saveCart();
+                updateCartUI();
+            }
+        }
+
+        function saveCart() {
+            localStorage.setItem('chiptelcel_cart', JSON.stringify(cart));
+        }
+
+        function getCartTotal() {
+            return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        }
+
+        function getCartCount() {
+            return cart.reduce((sum, item) => sum + item.quantity, 0);
+        }
+
+        function updateCartUI() {
+            const count = getCartCount();
+            const countBadge = document.getElementById('cart-count');
+            const cartItems = document.getElementById('cart-items');
+            const emptyCart = document.getElementById('empty-cart');
+            const cartFooter = document.getElementById('cart-footer');
+            const subtotalEl = document.getElementById('cart-subtotal');
+
+            // Badge
+            if (count > 0) {
+                countBadge.textContent = count;
+                countBadge.classList.remove('hidden');
+            } else {
+                countBadge.classList.add('hidden');
+            }
+
+            // Items
+            if (cart.length === 0) {
+                cartItems.innerHTML = `
+                    <div id="empty-cart" class="text-center py-16">
+                        <i class="fas fa-shopping-basket text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">Tu carrito está vacío</p>
+                        <p class="text-gray-400 text-sm mt-2">Agrega productos para continuar</p>
+                    </div>
+                `;
+                cartFooter.classList.add('hidden');
+            } else {
+                cartItems.innerHTML = cart.map(item => `
+                    <div class="flex gap-4 mb-5 pb-5 border-b border-gray-100 last:border-0">
+                        <div class="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center text-3xl flex-shrink-0">
+                            ${item.image}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-gray-900 text-sm truncate">${item.name}</h4>
+                            <p class="text-sm telcel-blue-text font-bold mt-1">$${item.price} MXN</p>
+                            <div class="flex items-center gap-3 mt-2">
+                                <button onclick="updateQuantity(${item.id}, -1)" class="quantity-btn">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
+                                <span class="font-medium text-sm w-6 text-center">${item.quantity}</span>
+                                <button onclick="updateQuantity(${item.id}, 1)" class="quantity-btn">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
+                                <button onclick="removeFromCart(${item.id})" class="ml-auto text-red-500 hover:text-red-700 text-sm">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                cartFooter.classList.remove('hidden');
+                subtotalEl.textContent = `$${getCartTotal().toFixed(2)}`;
+            }
+        }
+
+        function toggleCart() {
+            const sidebar = document.getElementById('cart-sidebar');
+            const overlay = document.getElementById('cart-overlay');
+            
+            sidebar.classList.toggle('open');
+            sidebar.classList.toggle('translate-x-full');
+            
+            if (sidebar.classList.contains('open')) {
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+                document.body.style.overflow = 'hidden';
+            } else {
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+                document.body.style.overflow = '';
+            }
+        }
+
+        function openCheckout() {
+            if (cart.length === 0) return;
+            
+            toggleCart();
+            
+            const total = getCartTotal();
+            const shipping = total >= 300 ? 0 : 49;
+            
+            document.getElementById('checkout-subtotal').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('checkout-shipping').textContent = shipping === 0 ? 'Gratis' : `$${shipping.toFixed(2)}`;
+            document.getElementById('checkout-total').textContent = `$${(total + shipping).toFixed(2)}`;
+            
+            document.getElementById('checkout-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        async function submitOrder(e) {
+            e.preventDefault();
+            
+            const payButton = document.getElementById('pay-button');
+            const errorEl = document.getElementById('payment-error');
+            errorEl.classList.add('hidden');
+            
+            // Disable button while processing
+            payButton.disabled = true;
+            payButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+            const total = getCartTotal();
+            const shipping = total >= 300 ? 0 : 49;
+
+            const payer = {
+                name: document.getElementById('payer-name').value.trim(),
+                email: document.getElementById('payer-email').value.trim(),
+                phone: document.getElementById('payer-phone').value.trim(),
+                address: document.getElementById('payer-address').value.trim()
+            };
+
+            try {
+                // Llamar al backend para crear la preferencia de Mercado Pago
+                const response = await fetch('/api/create-preference', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: cart.map(item => ({
+                            id: item.id,
+                            name: item.name,
+                            description: item.description,
+                            price: item.price,
+                            quantity: item.quantity
+                        })),
+                        payer: payer,
+                        shipping_cost: shipping
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'Error al crear el pago');
+                }
+
+                // Redirigir a Mercado Pago
+                // Usamos sandbox_init_point en modo test, init_point en producción
+                const checkoutUrl = data.sandbox_init_point || data.init_point;
+                
+                if (checkoutUrl) {
+                    // Guardamos el carrito temporalmente por si regresa
+                    window.location.href = checkoutUrl;
+                } else {
+                    throw new Error('No se recibió URL de pago');
+                }
+
+            } catch (error) {
+                console.error('Error de pago:', error);
+                errorEl.textContent = error.message || 'Error al conectar con Mercado Pago. Verifica que el servidor esté corriendo y configurado.';
+                errorEl.classList.remove('hidden');
+                
+                payButton.disabled = false;
+                payButton.innerHTML = '<i class="fas fa-lock"></i> Pagar con Mercado Pago';
+            }
+        }
+
+        function closeSuccess() {
+            document.getElementById('success-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Close modals on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const sidebar = document.getElementById('cart-sidebar');
+                if (sidebar.classList.contains('open')) toggleCart();
+                closeCheckout();
+                closeSuccess();
+            }
+        });
+    </script>
+</body>
+</html>

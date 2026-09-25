@@ -1,0 +1,34 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+  command = "npm install && node scripts/prepare-netlify.js"
+
+[functions]
+  node_bundler = "esbuild"
+
+# API → Netlify Functions
+[[redirects]]
+  from = "/api/create-preference"
+  to = "/.netlify/functions/create-preference"
+  status = 200
+
+[[redirects]]
+  from = "/api/webhook"
+  to = "/.netlify/functions/webhook"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/login"
+  to = "/.netlify/functions/admin-login"
+  status = 200
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
+# SPA fallback (no romper archivos existentes)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
